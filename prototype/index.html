@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLOBECHAT - International Multi-Country Messaging Platform</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E14;
+      --bg-secondary: #151A22;
+      --bg-device: #11151D;
+      --bubble-user: #3B82F6;
+      --text-user: #FFFFFF;
+      --bubble-other: #1F2937;
+      --text-other: #F3F4F6;
+      --accent-active: #10B981;
+      --accent-warn: #EF4444;
+      --accent-fire: #F59E0B;
+      --divider: #253041;
+      --text-muted: #9CA3AF;
+      --text-primary: #FFFFFF;
+      --card-bg: #1B2330;
+      --input-bg: #111622;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-display: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #F3F4F6;
+      --bg-secondary: #FFFFFF;
+      --bg-device: #F9FAFB;
+      --bubble-user: #2563EB;
+      --text-user: #FFFFFF;
+      --bubble-other: #E5E7EB;
+      --text-other: #1F2937;
+      --accent-active: #059669;
+      --accent-warn: #DC2626;
+      --accent-fire: #D97706;
+      --divider: #E5E7EB;
+      --text-muted: #6B7280;
+      --text-primary: #111827;
+      --card-bg: #F9FAFB;
+      --input-bg: #F3F4F6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    /* Web Layout Styling */
+    .app-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    /* Outer Device Frame Mockup */
+    .phone-container {
+      width: 410px;
+      height: 840px;
+      border-radius: 48px;
+      background-color: var(--bg-device);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 0 0 12px #1E293B;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
+      z-index: 10;
+    }
+
+    /* Dynamic notch simulation */
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 28px;
+      background-color: #1E293B;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone-notch::before {
+      content: '';
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #475569;
+      margin-bottom: 2px;
+    }
+
+    /* Screen container wrapper */
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      height: 100%;
+      padding-top: 36px; /* Space for clock/notch */
+    }
+
+    .screen-panel {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 36px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-device);
+      overflow-y: auto;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen-panel.active {
+      display: flex;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Top Bar Status */
+    .status-bar {
+      height: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 32px 0 28px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      z-index: 999;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+
+    /* Theme Switcher Header */
+    .header-controls {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .theme-toggle, .demo-token-btn {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--divider);
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-toggle:hover, .demo-token-btn:hover {
+      background-color: var(--divider);
+      transform: translateY(-1px);
+    }
+
+    /* Headers and Titles */
+    .auth-header {
+      text-align: center;
+      margin: 40px 24px 28px 24px;
+    }
+
+    .auth-logo {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--bubble-user) 0%, var(--accent-active) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .auth-tagline {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin: 0 24px 20px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .country-selector-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid var(--divider);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      padding: 0 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .country-selector-trigger:hover {
+      border-color: var(--text-muted);
+    }
+
+    .phone-input-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .dial-code-badge {
+      width: 80px;
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid var(--divider);
+      background-color: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .form-input {
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid var(--divider);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      padding: 0 16px;
+      font-size: 16px;
+      outline: none;
+      transition: var(--transition);
+      flex: 1;
+    }
+
+    .form-input:focus {
+      border-color: var(--bubble-user);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      height: 54px;
+      border-radius: 16px;
+      background-color: var(--bubble-user);
+      color: #FFFFFF;
+      border: none;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      height: 54px;
+      border-radius: 16px;
+      background-color: var(--bubble-other);
+      color: var(--text-primary);
+      border: 1px solid var(--divider);
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--divider);
+    }
+
+    /* SSO section */
+    .sso-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sso-divider::before, .sso-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .sso-divider:not(:empty)::before {
+      margin-right: 12px;
+    }
+
+    .sso-divider:not(:empty)::after {
+      margin-left: 12px;
+    }
+
+    .sso-buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0 24px 20px 24px;
+    }
+
+    .sso-btn {
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--divider);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .sso-btn:hover {
+      background-color: var(--divider);
+    }
+
+    .guest-btn-container {
+      margin: 0 24px 24px 24px;
+    }
+
+    /* OTP Code Inputs */
+    .otp-inputs-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .otp-box {
+      width: 50px;
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid var(--divider);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .otp-box:focus {
+      border-color: var(--bubble-user);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .timer-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0 24px 24px 24px;
+      font-weight: 500;
+    }
+
+    .resend-link {
+      color: var(--bubble-user);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .resend-link.disabled {
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Country Picker Panel */
+    .country-picker-search {
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      background-color: var(--bg-device);
+      z-index: 10;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+    }
+
+    .search-input-wrapper::before {
+      content: '🔍';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.6;
+    }
+
+    .search-input-wrapper input {
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--divider);
+      color: var(--text-primary);
+      padding-left: 44px;
+      padding-right: 16px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .country-list-section {
+      padding: 12px 24px;
+    }
+
+    .list-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      margin-top: 12px;
+    }
+
+    .country-list-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--divider);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .country-list-item:hover {
+      padding-left: 6px;
+    }
+
+    .country-flag-icon {
+      font-size: 24px;
+      margin-right: 14px;
+    }
+
+    .country-item-details {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .country-item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .country-item-dial {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Profile Setup Screen */
+    .avatar-upload-box {
+      align-self: center;
+      margin: 20px 0 24px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .avatar-preview {
+      width: 90px;
+      height: 90px;
+      border-radius: 45px;
+      background-color: var(--card-bg);
+      border: 2px dashed var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .avatar-preview:hover {
+      border-color: var(--bubble-user);
+    }
+
+    .avatar-add-icon {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 14px;
+      background-color: var(--bubble-user);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid var(--bg-device);
+    }
+
+    .interests-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .interest-chip {
+      padding: 8px 14px;
+      border-radius: 20px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .interest-chip.selected {
+      background-color: var(--bubble-user);
+      color: #FFFFFF;
+      border-color: var(--bubble-user);
+    }
+
+    /* Explore / Home Screen Redesign */
+    .home-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .home-header-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .home-profile-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .home-explore-content {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .home-search-bar {
+      position: relative;
+    }
+
+    .home-search-bar::before {
+      content: '🔍';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    .home-search-bar input {
+      width: 100%;
+      height: 42px;
+      border-radius: 14px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      color: var(--text-primary);
+      padding-left: 42px;
+      padding-right: 16px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .categories-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .categories-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-chip {
+      padding: 8px 16px;
+      border-radius: 18px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .category-chip.active {
+      background-color: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .trending-scroll-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .explore-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .explore-section-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .explore-section-link {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--bubble-user);
+      cursor: pointer;
+    }
+
+    .trending-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .trending-carousel::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .trending-carousel::-webkit-scrollbar-thumb {
+      background-color: var(--divider);
+      border-radius: 2px;
+    }
+
+    .trending-card {
+      min-width: 150px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .trending-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border-color: var(--text-muted);
+    }
+
+    .trending-card-flag {
+      font-size: 28px;
+    }
+
+    .trending-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 18px;
+      height: 36px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .trending-card-members {
+      font-size: 11px;
+      color: var(--accent-active);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .room-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .room-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .room-card:hover {
+      border-color: var(--text-muted);
+      transform: scale(0.99);
+    }
+
+    .room-card-flag {
+      font-size: 26px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-color: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .room-card-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .room-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .room-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .room-card-pop {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-fire);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .room-card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .room-card-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .room-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .room-badge.lang {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--bubble-user);
+    }
+
+    .room-badge.category {
+      background-color: rgba(156, 163, 175, 0.15);
+      color: var(--text-muted);
+    }
+
+    .room-badge.timed {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--accent-warn);
+    }
+
+    .room-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .room-member-pulse {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-active);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background-color: var(--accent-active);
+      animation: pulseAnim 1.2s infinite alternate;
+    }
+
+    @keyframes pulseAnim {
+      from { transform: scale(0.8); opacity: 0.4; }
+      to { transform: scale(1.4); opacity: 1; }
+    }
+
+    /* Join Confirmation Sheet Overlay */
+    .bottom-sheet-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.65);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      backdrop-filter: blur(4px);
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      background-color: var(--bg-device);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-top: 1px solid var(--divider);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 20px;
+      margin-bottom: 20px;
+    }
+
+    .rules-list {
+      background-color: var(--input-bg);
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rule-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--text-other);
+    }
+
+    .rule-num {
+      color: var(--bubble-user);
+      font-weight: 700;
+    }
+
+    /* Active Chat Screen */
+    .chat-header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--divider);
+      padding: 0 16px;
+      background-color: var(--bg-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .chat-back-arrow {
+      font-size: 20px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .chat-header-flag {
+      font-size: 24px;
+    }
+
+    .chat-title-box {
+      overflow: hidden;
+    }
+
+    .chat-title {
+      font-size: 14px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chat-subtitle {
+      font-size: 11px;
+      color: var(--accent-active);
+      font-weight: 500;
+    }
+
+    .chat-timer {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-active);
+    }
+
+    .chat-timer.warn {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--accent-warn);
+      animation: pulse 1s infinite alternate;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: var(--bg-device);
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--divider);
+      border-radius: 2px;
+    }
+
+    .chat-msg-row {
+      max-width: 80%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-msg-row.own {
+      align-self: flex-end;
+    }
+
+    .chat-msg-row.other {
+      align-self: flex-start;
+    }
+
+    .chat-msg-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      padding-left: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chat-msg-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 19px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .chat-msg-row.own .chat-msg-bubble {
+      background-color: var(--bubble-user);
+      color: var(--text-user);
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-msg-row.other .chat-msg-bubble {
+      background-color: var(--bubble-other);
+      color: var(--text-other);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-msg-time {
+      font-size: 9px;
+      align-self: flex-end;
+      margin-top: 4px;
+      opacity: 0.7;
+      text-align: right;
+    }
+
+    .translation-tooltip {
+      font-size: 11px;
+      color: var(--bubble-user);
+      margin-top: 2px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background-color: rgba(59, 130, 246, 0.1);
+      display: none;
+      align-self: flex-start;
+      font-style: italic;
+    }
+
+    .translation-tooltip.show {
+      display: block;
+    }
+
+    .chat-typing {
+      display: none;
+      align-self: flex-start;
+      margin-left: 16px;
+      margin-bottom: 8px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .typing-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Composer */
+    .chat-composer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background-color: var(--bg-secondary);
+    }
+
+    .composer-input-box {
+      flex: 1;
+      height: 42px;
+      border-radius: 21px;
+      border: 1px solid var(--divider);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      padding: 0 16px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .composer-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 21px;
+      background-color: var(--bubble-user);
+      color: #FFFFFF;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .composer-btn.secondary {
+      background-color: var(--bubble-other);
+      color: var(--text-muted);
+      border: 1px solid var(--divider);
+    }
+
+    .composer-btn.secondary:hover {
+      color: var(--text-primary);
+    }
+
+    /* Expired Screen */
+    .expired-content {
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+
+    .expired-badge {
+      width: 90px;
+      height: 90px;
+      border-radius: 45px;
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--accent-warn);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      margin-bottom: 24px;
+    }
+
+    .expired-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .expired-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stats-container {
+      width: 100%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--divider);
+      border-radius: 20px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls outside the mobile phone container -->
+  <div class="header-controls">
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+  </div>
+
+  <div class="app-background"></div>
+
+  <!-- Mobile phone viewport container -->
+  <div class="phone-container">
+    <div class="phone-notch"></div>
+    
+    <div class="status-bar">
+      <span id="phone-clock">09:41</span>
+      <span>📶 🔋</span>
+    </div>
+
+    <div class="screen">
+      <!-- 1. LOGIN SCREEN -->
+      <div class="screen-panel active" id="screen-login">
+        <div class="auth-header">
+          <div class="auth-logo">GLOBECHAT</div>
+          <div class="auth-tagline">Global Messaging Hub</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Country / Region</label>
+          <div class="country-selector-trigger" onclick="openCountryPicker()">
+            <span id="login-selected-country">🇮🇳 India</span>
+            <span style="opacity: 0.5;">▼</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <div class="phone-input-row">
+            <div class="dial-code-badge" id="login-dial-code">+91</div>
+            <input type="tel" class="form-input" id="login-phone" placeholder="98765 43210" value="9876543210">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <button class="btn-primary" onclick="goToOtp()">Send Access OTP</button>
+        </div>
+
+        <div class="sso-divider">Or continue with</div>
+
+        <div class="sso-buttons-grid">
+          <button class="sso-btn" onclick="simulateSSOLogin('Google')">
+            <span>🌐</span> Google
+          </button>
+          <button class="sso-btn" onclick="simulateSSOLogin('Apple')">
+            <span>🍎</span> Apple
+          </button>
+        </div>
+
+        <div class="guest-btn-container">
+          <button class="btn-secondary" onclick="simulateSSOLogin('Guest')">
+            👤 Enter as Guest
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. COUNTRY PICKER SCREEN -->
+      <div class="screen-panel" id="screen-countries">
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <span class="chat-back-arrow" onclick="closeCountryPicker()">←</span>
+            <span class="chat-title" style="font-size: 16px;">Select Country</span>
+          </div>
+        </div>
+
+        <div class="country-picker-search">
+          <div class="search-input-wrapper">
+            <input type="text" id="country-search" placeholder="Search country or code..." oninput="filterCountries()">
+          </div>
+        </div>
+
+        <div class="country-list-section">
+          <div class="list-section-title" id="recents-header">Recently Selected</div>
+          <div id="recent-countries-container">
+            <!-- Populated dynamically -->
+          </div>
+
+          <div class="list-section-title">All Countries</div>
+          <div id="all-countries-container">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. OTP VERIFICATION SCREEN -->
+      <div class="screen-panel" id="screen-otp">
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <span class="chat-back-arrow" onclick="switchPanel('screen-login')">←</span>
+            <span class="chat-title" style="font-size: 16px;">OTP Verification</span>
+          </div>
+        </div>
+
+        <div class="auth-header" style="margin-top: 24px;">
+          <div class="auth-logo" style="font-size: 26px;">Verification Code</div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px; line-height: 18px;">
+            We have sent a verification code to <br><strong id="otp-phone-display" style="color: var(--text-primary);">+91 98765 43210</strong>
+          </p>
+        </div>
+
+        <div class="form-group">
+          <div class="otp-inputs-row">
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, 'otp2', '')" id="otp1" autofocus>
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, 'otp3', 'otp1')" id="otp2">
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, 'otp4', 'otp2')" id="otp3">
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, 'otp5', 'otp3')" id="otp4">
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, 'otp6', 'otp4')" id="otp5">
+            <input type="text" class="otp-box" maxlength="1" onkeyup="moveOtpFocus(this, '', 'otp5')" id="otp6">
+          </div>
+          <button class="btn-primary" onclick="verifyOtpCode()">Verify & Connect</button>
+        </div>
+
+        <div class="timer-row">
+          <span>Didn't receive code?</span>
+          <span class="resend-link disabled" id="resend-timer-label" onclick="resendOtp()">Resend in <span id="otp-timer-sec">30</span>s</span>
+        </div>
+      </div>
+
+      <!-- 4. PROFILE SETUP SCREEN -->
+      <div class="screen-panel" id="screen-profile">
+        <div class="auth-header" style="margin-top: 20px; margin-bottom: 12px;">
+          <div class="auth-logo" style="font-size: 26px;">Create Profile</div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Set up your global identity</p>
+        </div>
+
+        <div class="avatar-upload-box" onclick="changeMockAvatar()">
+          <div class="avatar-preview" id="profile-avatar-display">🦊
+            <div class="avatar-add-icon">📸</div>
+          </div>
+          <span style="font-size: 12px; color: var(--bubble-user); font-weight: 700;">Tap to change avatar</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="profile-username" placeholder="eg. alex_global" value="alex_global">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bio / Status</label>
+          <input type="text" class="form-input" id="profile-bio" placeholder="Connecting from India!" value="Excited to meet new people globally 🌏">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Language</label>
+          <select class="form-input" id="profile-language" style="appearance: none;">
+            <option value="en">English</option>
+            <option value="hi" selected>Hindi (हिन्दी)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="ja">Japanese (日本語)</option>
+            <option value="ko">Korean (한국어)</option>
+            <option value="es">Spanish (Español)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Choose Interests</label>
+          <div class="interests-container">
+            <div class="interest-chip selected" onclick="toggleInterest(this)">🌏 Global Chat</div>
+            <div class="interest-chip selected" onclick="toggleInterest(this)">🎮 Gaming</div>
+            <div class="interest-chip" onclick="toggleInterest(this)">🎌 Anime</div>
+            <div class="interest-chip selected" onclick="toggleInterest(this)">💻 Coding</div>
+            <div class="interest-chip" onclick="toggleInterest(this)">🎓 Students</div>
+            <div class="interest-chip" onclick="toggleInterest(this)">⚽ Sports</div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px; margin-bottom: 30px;">
+          <button class="btn-primary" onclick="completeProfileSetup()">Save & Start Exploring</button>
+        </div>
+      </div>
+
+      <!-- 5. EXPLORE / HOME SCREEN REDESIGN -->
+      <div class="screen-panel" id="screen-home">
+        <div class="home-header">
+          <span class="home-header-title">GLOBECHAT</span>
+          <div class="home-profile-avatar" id="home-profile-btn" onclick="switchPanel('screen-profile')">🦊</div>
+        </div>
+
+        <div class="home-explore-content">
+          <!-- Search -->
+          <div class="home-search-bar">
+            <input type="text" id="room-search" placeholder="Search communities, countries, tags..." oninput="filterRooms()">
+          </div>
+
+          <!-- Horizontal Categories -->
+          <div class="categories-scroll">
+            <div class="category-chip active" onclick="selectCategory(this, 'all')">All Rooms</div>
+            <div class="category-chip" onclick="selectCategory(this, 'global')">🌍 Global</div>
+            <div class="category-chip" onclick="selectCategory(this, 'country')">🇮🇳 My Country</div>
+            <div class="category-chip" onclick="selectCategory(this, 'gaming')">🎮 Gaming</div>
+            <div class="category-chip" onclick="selectCategory(this, 'anime')">🎌 Anime & Pop</div>
+            <div class="category-chip" onclick="selectCategory(this, 'tech')">💻 Developers</div>
+          </div>
+
+          <!-- Trending Section -->
+          <div class="trending-scroll-container">
+            <div class="explore-title-row">
+              <span class="explore-section-title">Trending Communities</span>
+              <span class="explore-section-link">View All</span>
+            </div>
+            <div class="trending-carousel" id="trending-carousel-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Public Rooms list -->
+          <div class="trending-scroll-container">
+            <div class="explore-title-row">
+              <span class="explore-section-title">Discover Communities</span>
+            </div>
+            <div class="room-list-container" id="rooms-list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. ACTIVE CHAT SCREEN -->
+      <div class="screen-panel" id="screen-chat">
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <span class="chat-back-arrow" onclick="exitToHome()">←</span>
+            <span class="chat-header-flag" id="chat-flag-display">🇮🇳</span>
+            <div class="chat-title-box">
+              <div class="chat-title" id="chat-title-display">India Global Chat</div>
+              <div class="chat-subtitle" id="chat-subtitle-display">1,421 members online</div>
+            </div>
+          </div>
+          <div class="chat-timer" id="chat-timer-display">Public</div>
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="chat-messages" id="chat-messages-container">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Typing Box -->
+        <div class="chat-typing" id="chat-typing-container">
+          <span class="pulse-dot"></span>
+          <span class="typing-text" id="chat-typing-text">Sarah (USA) is typing...</span>
+        </div>
+
+        <!-- Composer -->
+        <div class="chat-composer">
+          <button class="composer-btn secondary" onclick="simulateMediaMessage('image')">🖼️</button>
+          <input type="text" class="composer-input-box" id="chat-input" placeholder="Type a translated message...">
+          <button class="composer-btn" onclick="sendChatMessage()">⚡</button>
+        </div>
+      </div>
+
+      <!-- 7. EXPIRED SCREEN -->
+      <div class="screen-panel" id="screen-expired">
+        <div class="expired-content">
+          <div class="expired-badge">⏳</div>
+          <h2 class="expired-title">Timed Access Expired</h2>
+          <p class="expired-desc">
+            Your secure session token for this private room has reached its limit and expired. All local keys have been purged.
+          </p>
+
+          <div class="stats-container">
+            <div class="stat-item">
+              <span style="color: var(--text-muted)">Room Status</span>
+              <span style="color: var(--accent-warn)">Disconnected (Locked)</span>
+            </div>
+            <div class="stat-item">
+              <span style="color: var(--text-muted)">Messages Exchanged</span>
+              <span id="expired-msg-count">0</span>
+            </div>
+            <div class="stat-item">
+              <span style="color: var(--text-muted)">Decryption Profile</span>
+              <span>Cleaned up</span>
+            </div>
+          </div>
+
+          <button class="btn-primary" style="width: 100%;" onclick="switchPanel('screen-home')">Explore More Rooms</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Sheet Rule Confirmation Dialog -->
+    <div class="bottom-sheet-overlay" id="join-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="sheet-title">
+          <span id="sheet-flag">🇮🇳</span> <span id="sheet-title">India Global Chat</span>
+        </div>
+        <p class="sheet-desc" id="sheet-desc">Welcome to the official public space for members connecting in India. Please verify room guidelines before entering.</p>
+        
+        <div class="list-section-title" style="margin-bottom: 8px;">Community Rules</div>
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-num">1</span>
+            <span>Be respectful to all international participants. No hate speech or slurs.</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-num">2</span>
+            <span>Auto-translate is enabled. Avoid spamming local slang that might break translations.</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-num">3</span>
+            <span id="rule-expiry-text">This is a public community room. Your presence is verified by phone auth.</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-secondary" onclick="closeJoinSheet()">Cancel</button>
+          <button class="btn-primary" style="flex: 1;" onclick="confirmJoinRoom()">Agree & Join Room</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Theme Management
+    function toggleTheme() {
+      const body = document.body;
+      const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      body.setAttribute('data-theme', theme);
+    }
+
+    // Sync System clock for mockup header
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('phone-clock').innerText = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Data Structures
+    const countries = [
+      { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳', defaultLanguage: 'hi' },
+      { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸', defaultLanguage: 'en' },
+      { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧', defaultLanguage: 'en' },
+      { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵', defaultLanguage: 'ja' },
+      { code: 'BD', name: 'Bangladesh', dialCode: '+880', flag: '🇧🇩', defaultLanguage: 'bn' },
+      { code: 'CA', name: 'Canada', dialCode: '+1', flag: '🇨🇦', defaultLanguage: 'en' },
+      { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺', defaultLanguage: 'en' },
+      { code: 'DE', name: 'Germany', dialCode: '+49', flag: '🇩🇪', defaultLanguage: 'de' },
+      { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷', defaultLanguage: 'fr' },
+      { code: 'BR', name: 'Brazil', dialCode: '+55', flag: '🇧🇷', defaultLanguage: 'pt' },
+      { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬', defaultLanguage: 'en' },
+      { code: 'AE', name: 'United Arab Emirates', dialCode: '+971', flag: '🇦🇪', defaultLanguage: 'ar' },
+      { code: 'KR', name: 'South Korea', dialCode: '+82', flag: '🇰🇷', defaultLanguage: 'ko' }
+    ];
+
+    let selectedCountry = countries[0];
+    let recentCountries = [countries[0], countries[1], countries[3]];
+
+    const rooms = [
+      { id: '1', title: 'India Global Chat', category: 'country', country: 'IN', flag: '🇮🇳', members: 1421, popularity: 98, lang: 'Hindi/English', isTimed: false, desc: 'Official hub for India and global NRI connections. Discuss culture, tech, and meet people.' },
+      { id: '2', title: 'USA Community', category: 'country', country: 'US', flag: '🇺🇸', members: 890, popularity: 85, lang: 'English', isTimed: false, desc: 'Connect with community members from East Coast to West Coast.' },
+      { id: '3', title: 'Japan Anime Group', category: 'anime', country: 'JP', flag: '🇯🇵', members: 2310, popularity: 99, lang: 'Japanese/Multilingual', isTimed: false, desc: 'Anime, Manga, J-Pop and Japanese culture discussion. Everyone welcome!' },
+      { id: '4', title: 'UK Students Room', category: 'students', country: 'GB', flag: '🇬🇧', members: 420, popularity: 72, lang: 'English', isTimed: false, desc: 'Space for university students across London, Manchester, and Edinburgh.' },
+      { id: '5', title: 'Global Developers Hub', category: 'tech', country: 'ALL', flag: '💻', members: 3105, popularity: 97, lang: 'English (Translating)', isTimed: false, desc: 'Share code, talk architecture, and pair-program with devs worldwide.' },
+      { id: '6', title: 'International Gaming Chat', category: 'gaming', country: 'ALL', flag: '🎮', members: 1820, popularity: 90, lang: 'English/Japanese', isTimed: false, desc: 'LFG, tournaments, and discussion about console, PC, and mobile gaming.' },
+      { id: '7', title: 'Design Sprint (Timed)', category: 'tech', country: 'ALL', flag: '⚡', members: 5, popularity: 40, lang: 'English', isTimed: true, timeLimit: 60, desc: 'Private 1-minute design discussion. Message logs will expire and self-destruct.' },
+      { id: '8', title: 'Fast Expiry Test', category: 'global', country: 'ALL', flag: '⏳', members: 2, popularity: 15, lang: 'English', isTimed: true, timeLimit: 10, desc: '10-second fast-expiry sandbox room.' },
+      { id: '9', title: 'Bangladesh Chatroom', category: 'country', country: 'BD', flag: '🇧🇩', members: 310, popularity: 65, lang: 'Bengali', isTimed: false, desc: 'Connect with members and friends in Bangladesh and globally.' }
+    ];
+
+    const mockMessages = {
+      '1': [
+        { sender: 'Rajesh (IN) 🇮🇳', content: 'नमस्ते दोस्तों! कैसे हैं सब?', translation: 'Hello friends! How is everyone?', type: 'text', time: '12:04 PM' },
+        { sender: 'Amina (BD) 🇧🇩', content: 'আমি ভালো আছি, আপনি কেমন আছেন?', translation: 'I am doing well, how are you?', type: 'text', time: '12:05 PM' },
+        { sender: 'Sam (US) 🇺🇸', content: 'Hey everyone, the automatic translation is working perfectly here!', type: 'text', time: '12:05 PM' }
+      ],
+      '3': [
+        { sender: 'Takashi (JP) 🇯🇵', content: 'こんにちは！日本のアニメが好きな人？', translation: 'Hello! Who likes Japanese anime?', type: 'text', time: '04:10 PM' },
+        { sender: 'Sarah (US) 🇺🇸', content: 'Me! I am currently watching Demon Slayer. It is incredible!', type: 'text', time: '04:11 PM' },
+        { sender: 'Yuki (JP) 🇯🇵', content: 'あ、鬼滅の刃ですね！炭治郎がかっこいい。', translation: 'Ah, Demon Slayer! Tanjiro is cool.', type: 'text', time: '04:12 PM' }
+      ],
+      '5': [
+        { sender: 'Linus (DE) 🇩🇪', content: 'Supabase real-time is perfect for scaling chat apps.', type: 'text', time: '08:30 PM' },
+        { sender: 'Priya (IN) 🇮🇳', content: 'Agreed, the RLS policies keep the timed-access sessions safe.', type: 'text', time: '08:31 PM' }
+      ]
+    };
+
+    const botReplies = [
+      { content: 'Wow! This international room is very active today!', translation: 'Wow! This international room is very active today!' },
+      { content: 'Can anyone recommend a good local dish from their country?', translation: 'Can anyone recommend a good local dish from their country?' },
+      { content: 'I love how GlobeChat translates everything instantly.', translation: 'I love how GlobeChat translates everything instantly.' },
+      { content: 'Are there any events happening in your region soon?', translation: 'Are there any events happening in your region soon?' }
+    ];
+
+    // State Variables
+    let currentPanelId = 'screen-login';
+    let otpTimerInterval = null;
+    let chatTimerInterval = null;
+    let botTypingTimeout = null;
+    let selectedRoom = null;
+    let messagesSent = 0;
+    let secondsLeft = 0;
+    let currentCategory = 'all';
+
+    // Startup Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      populateCountries();
+      populateExploreDashboard();
+    });
+
+    // Panel Switching
+    function switchPanel(panelId) {
+      document.querySelectorAll('.screen-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      const targetPanel = document.getElementById(panelId);
+      targetPanel.classList.add('active');
+      currentPanelId = panelId;
+
+      // Special screen actions
+      if (panelId === 'screen-otp') {
+        startOtpCountdown();
+        document.getElementById('otp1').focus();
+      }
+    }
+
+    // Country Selector Screen Helpers
+    function openCountryPicker() {
+      switchPanel('screen-countries');
+      document.getElementById('country-search').value = '';
+      filterCountries();
+    }
+
+    function closeCountryPicker() {
+      switchPanel('screen-login');
+    }
+
+    function selectCountry(countryCode) {
+      const match = countries.find(c => c.code === countryCode);
+      if (match) {
+        selectedCountry = match;
+        document.getElementById('login-selected-country').innerText = `${match.flag} ${match.name}`;
+        document.getElementById('login-dial-code').innerText = match.dialCode;
+        
+        // Add to recents if not already there
+        if (!recentCountries.some(rc => rc.code === countryCode)) {
+          recentCountries.unshift(match);
+          if (recentCountries.length > 4) recentCountries.pop();
+        }
+        populateCountries();
+        closeCountryPicker();
+      }
+    }
+
+    function populateCountries() {
+      // Recents
+      const recentsContainer = document.getElementById('recent-countries-container');
+      const recentsHeader = document.getElementById('recents-header');
+      if (recentCountries.length === 0) {
+        recentsHeader.style.display = 'none';
+        recentsContainer.innerHTML = '';
+      } else {
+        recentsHeader.style.display = 'block';
+        recentsContainer.innerHTML = recentCountries.map(c => `
+          <div class="country-list-item" onclick="selectCountry('${c.code}')">
+            <span class="country-flag-icon">${c.flag}</span>
+            <div class="country-item-details">
+              <span class="country-item-name">${c.name}</span>
+              <span class="country-item-dial">${c.dialCode}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // All
+      const allContainer = document.getElementById('all-countries-container');
+      allContainer.innerHTML = countries.map(c => `
+        <div class="country-list-item" onclick="selectCountry('${c.code}')">
+          <span class="country-flag-icon">${c.flag}</span>
+          <div class="country-item-details">
+            <span class="country-item-name">${c.name}</span>
+            <span class="country-item-dial">${c.dialCode}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCountries() {
+      const query = document.getElementById('country-search').value.toLowerCase().trim();
+      const items = document.querySelectorAll('#all-countries-container .country-list-item');
+      
+      items.forEach((item, idx) => {
+        const name = countries[idx].name.toLowerCase();
+        const code = countries[idx].code.toLowerCase();
+        const dial = countries[idx].dialCode.toLowerCase();
+        
+        if (name.includes(query) || code.includes(query) || dial.includes(query)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // OTP Verification Flow
+    function goToOtp() {
+      const phoneInput = document.getElementById('login-phone').value.trim();
+      if (phoneInput.length < 6) {
+        alert('Please enter a valid phone number');
+        return;
+      }
+      document.getElementById('otp-phone-display').innerText = `${selectedCountry.dialCode} ${phoneInput}`;
+      switchPanel('screen-otp');
+    }
+
+    function startOtpCountdown() {
+      if (otpTimerInterval) clearInterval(otpTimerInterval);
+      let count = 30;
+      const secLabel = document.getElementById('otp-timer-sec');
+      const resendLink = document.getElementById('resend-timer-label');
+      
+      resendLink.classList.add('disabled');
+      secLabel.innerText = count;
+
+      otpTimerInterval = setInterval(() => {
+        count--;
+        secLabel.innerText = count;
+        if (count <= 0) {
+          clearInterval(otpTimerInterval);
+          resendLink.classList.remove('disabled');
+          resendLink.innerHTML = `<span class="resend-link" onclick="resendOtp()">Resend OTP Code</span>`;
+        }
+      }, 1000);
+    }
+
+    function resendOtp() {
+      alert('Verification code sent successfully!');
+      startOtpCountdown();
+    }
+
+    function moveOtpFocus(current, nextId, prevId) {
+      if (current.value.length === 1 && nextId) {
+        document.getElementById(nextId).focus();
+      }
+      // handle backspace
+      if (event.key === 'Backspace' && prevId) {
+        document.getElementById(prevId).focus();
+      }
+    }
+
+    function verifyOtpCode() {
+      // Gather all digits
+      const d1 = document.getElementById('otp1').value;
+      const d2 = document.getElementById('otp2').value;
+      const d3 = document.getElementById('otp3').value;
+      const d4 = document.getElementById('otp4').value;
+      const d5 = document.getElementById('otp5').value;
+      const d6 = document.getElementById('otp6').value;
+      
+      const fullCode = d1 + d2 + d3 + d4 + d5 + d6;
+      if (fullCode.length < 6) {
+        alert('Please fill out the 6-digit OTP code');
+        return;
+      }
+      
+      // Navigate to profile setup
+      // Set default username based on country
+      document.getElementById('profile-username').value = `user_${selectedCountry.code.toLowerCase()}_${Math.floor(100 + Math.random()*900)}`;
+      document.getElementById('profile-language').value = selectedCountry.defaultLanguage;
+      switchPanel('screen-profile');
+    }
+
+    // SSO login shortcuts
+    function simulateSSOLogin(provider) {
+      alert(`Connected successfully via ${provider}`);
+      document.getElementById('profile-username').value = `${provider.toLowerCase()}_user_${Math.floor(100 + Math.random()*900)}`;
+      switchPanel('screen-profile');
+    }
+
+    // Profile Setup Details
+    const avatars = ['🦊', '🐱', '🐼', '🐨', '🐸', '🦁', '🦖', '🦄', '🐙'];
+    let currentAvatarIndex = 0;
+    
+    function changeMockAvatar() {
+      currentAvatarIndex = (currentAvatarIndex + 1) % avatars.length;
+      document.getElementById('profile-avatar-display').innerHTML = `${avatars[currentAvatarIndex]} <div class="avatar-add-icon">📸</div>`;
+    }
+
+    function toggleInterest(element) {
+      element.classList.toggle('selected');
+    }
+
+    function completeProfileSetup() {
+      const username = document.getElementById('profile-username').value.trim();
+      if (!username) {
+        alert('Username cannot be empty');
+        return;
+      }
+      // Update header avatar representation
+      document.getElementById('home-profile-btn').innerText = avatars[currentAvatarIndex];
+      switchPanel('screen-home');
+    }
+
+    // Home Screen Explorer
+    function populateExploreDashboard() {
+      // Trending Carousel
+      const trendingContainer = document.getElementById('trending-carousel-container');
+      const trendingRooms = rooms.filter(r => r.popularity >= 85).slice(0, 4);
+      
+      trendingContainer.innerHTML = trendingRooms.map(r => `
+        <div class="trending-card" onclick="openJoinSheet('${r.id}')">
+          <span class="trending-card-flag">${r.flag}</span>
+          <span class="trending-card-title">${r.title}</span>
+          <span class="trending-card-members">
+            <span class="pulse-dot"></span>
+            ${r.members} online
+          </span>
+        </div>
+      `).join('');
+
+      // Explore List
+      filterRooms();
+    }
+
+    function selectCategory(element, category) {
+      document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.classList.remove('active');
+      });
+      element.classList.add('active');
+      currentCategory = category;
+      filterRooms();
+    }
+
+    function filterRooms() {
+      const searchVal = document.getElementById('room-search').value.toLowerCase().trim();
+      const listContainer = document.getElementById('rooms-list-container');
+      
+      let filtered = rooms;
+
+      // Category filter
+      if (currentCategory === 'global') {
+        filtered = rooms.filter(r => r.country === 'ALL');
+      } else if (currentCategory === 'country') {
+        filtered = rooms.filter(r => r.country === selectedCountry.code);
+      } else if (currentCategory !== 'all') {
+        filtered = rooms.filter(r => r.category === currentCategory);
+      }
+
+      // Search filter
+      if (searchVal) {
+        filtered = filtered.filter(r => 
+          r.title.toLowerCase().includes(searchVal) || 
+          r.desc.toLowerCase().includes(searchVal) ||
+          r.lang.toLowerCase().includes(searchVal)
+        );
+      }
+
+      if (filtered.length === 0) {
+        listContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">No communities found matching filters</div>`;
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map(r => `
+        <div class="room-card" onclick="openJoinSheet('${r.id}')">
+          <div class="room-card-flag">${r.flag}</div>
+          <div class="room-card-content">
+            <div class="room-card-top">
+              <span class="room-card-title">${r.title}</span>
+              <span class="room-card-pop">🔥 ${r.popularity}</span>
+            </div>
+            <span class="room-card-desc">${r.desc}</span>
+            <div class="room-card-badges">
+              <span class="room-badge lang">${r.lang}</span>
+              ${r.isTimed ? `<span class="room-badge timed">⏳ Timed (${r.timeLimit}s)</span>` : ''}
+            </div>
+          </div>
+          <div class="room-card-right">
+            <span class="room-member-pulse">
+              <span class="pulse-dot"></span>
+              ${r.members}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Join Bottom Sheet Interaction
+    function openJoinSheet(roomId) {
+      const room = rooms.find(r => r.id === roomId);
+      if (!room) return;
+      selectedRoom = room;
+
+      document.getElementById('sheet-flag').innerText = room.flag;
+      document.getElementById('sheet-title').innerText = room.title;
+      document.getElementById('sheet-desc').innerText = room.desc;
+      
+      const ruleExpiry = document.getElementById('rule-expiry-text');
+      if (room.isTimed) {
+        ruleExpiry.innerHTML = `This room has a strict <strong>${room.timeLimit} seconds</strong> session limit. Your access token will expire automatically.`;
+      } else {
+        ruleExpiry.innerHTML = `This is a public community room. Your presence is verified by phone auth.`;
+      }
+
+      document.getElementById('join-sheet-overlay').style.display = 'flex';
+    }
+
+    function closeJoinSheet() {
+      document.getElementById('join-sheet-overlay').style.display = 'none';
+      selectedRoom = null;
+    }
+
+    function confirmJoinRoom() {
+      closeJoinSheet();
+      enterChatRoom(selectedRoom);
+    }
+
+    // Chat Screen Operations
+    function enterChatRoom(room) {
+      selectedRoom = room;
+      messagesSent = 0;
+      switchPanel('screen-chat');
+
+      // Populate header
+      document.getElementById('chat-flag-display').innerText = room.flag;
+      document.getElementById('chat-title-display').innerText = room.title;
+      document.getElementById('chat-subtitle-display').innerText = `${room.members} members online`;
+
+      // Set up message stream
+      const chatContainer = document.getElementById('chat-messages-container');
+      chatContainer.innerHTML = '';
+
+      // Set up timer badge
+      const timerBadge = document.getElementById('chat-timer-display');
+      timerBadge.classList.remove('warn');
+      if (room.isTimed) {
+        secondsLeft = room.timeLimit;
+        timerBadge.innerText = formatTimeLeft(secondsLeft);
+        startChatTimer();
+      } else {
+        timerBadge.innerText = 'Public';
+      }
+
+      // Add default dummy messages
+      const initialLogs = mockMessages[room.id] || [
+        { sender: 'System Announcement 📢', content: `Welcome to the ${room.title}! Keep chats friendly. Type a message to translate dynamically on tap.`, type: 'announcement', time: '12:00 PM' }
+      ];
+
+      initialLogs.forEach(msg => {
+        appendMessageUI(msg);
+      });
+
+      // Enable simulated bot responses
+      startBotSimulation();
+    }
+
+    function formatTimeLeft(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startChatTimer() {
+      if (chatTimerInterval) clearInterval(chatTimerInterval);
+      const timerBadge = document.getElementById('chat-timer-display');
+
+      chatTimerInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(chatTimerInterval);
+          chatSessionExpired();
+          return;
+        }
+
+        timerBadge.innerText = formatTimeLeft(secondsLeft);
+        if (secondsLeft <= 15) {
+          timerBadge.classList.add('warn');
+        }
+      }, 1000);
+    }
+
+    function appendMessageUI(msg, isOwn = false) {
+      const container = document.getElementById('chat-messages-container');
+      
+      const row = document.createElement('div');
+      row.className = `chat-msg-row ${isOwn ? 'own' : 'other'}`;
+
+      if (msg.type === 'announcement') {
+        row.style.maxWidth = '100%';
+        row.style.alignSelf = 'center';
+        row.innerHTML = `
+          <div style="background-color: var(--card-bg); font-size: 11px; padding: 6px 12px; border-radius: 10px; color: var(--text-muted); font-weight: 600; text-align: center; border: 1px solid var(--divider);">
+            ${msg.content}
+          </div>
+        `;
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
+        return;
+      }
+
+      let header = '';
+      if (!isOwn) {
+        header = `<div class="chat-msg-info">${msg.sender}</div>`;
+      }
+
+      let contentHTML = `<div>${msg.content}</div>`;
+      if (msg.type === 'image') {
+        contentHTML = `<div style="border-radius: 12px; overflow: hidden; margin-bottom: 4px;"><img src="${msg.media_url}" style="width: 100%; max-height: 150px; object-fit: cover; display: block;" /></div>`;
+      }
+
+      let translateTooltip = '';
+      if (msg.translation) {
+        translateTooltip = `<div class="translation-tooltip" id="trans-tooltip-${Math.floor(Math.random()*10000)}">Translate: ${msg.translation}</div>`;
+      }
+
+      row.innerHTML = `
+        ${header}
+        <div class="chat-msg-bubble" onclick="toggleTranslation(this)">
+          ${contentHTML}
+          <div class="chat-msg-time">${msg.time}</div>
+        </div>
+        ${translateTooltip}
+      `;
+
+      container.appendChild(row);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function toggleTranslation(element) {
+      // Find neighboring tooltip in row
+      const tooltip = element.parentNode.querySelector('.translation-tooltip');
+      if (tooltip) {
+        tooltip.classList.toggle('show');
+      }
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (selectedRoom.isTimed && secondsLeft <= 0) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      appendMessageUI({
+        content: text,
+        time: timeStr
+      }, true);
+
+      input.value = '';
+      messagesSent++;
+
+      // Trigger bot reaction
+      triggerBotResponse();
+    }
+
+    function simulateMediaMessage(type) {
+      if (selectedRoom.isTimed && secondsLeft <= 0) return;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (type === 'image') {
+        appendMessageUI({
+          type: 'image',
+          media_url: 'https://images.unsplash.com/photo-1513829096960-ef04e7c627ea?auto=format&fit=crop&w=400&q=80',
+          time: timeStr
+        }, true);
+      }
+      messagesSent++;
+      triggerBotResponse();
+    }
+
+    function triggerBotResponse() {
+      if (botTypingTimeout) clearTimeout(botTypingTimeout);
+      const typingBox = document.getElementById('chat-typing-container');
+      const typingText = document.getElementById('chat-typing-text');
+      
+      const bots = [
+        { name: 'Sarah (USA) 🇺🇸', text: 'Sarah (USA) is typing...' },
+        { name: 'Yuki (JP) 🇯🇵', text: 'Yuki (JP) is typing...' },
+        { name: 'Rajesh (IN) 🇮🇳', text: 'Rajesh (IN) is typing...' }
+      ];
+
+      const activeBot = bots[Math.floor(Math.random() * bots.length)];
+
+      botTypingTimeout = setTimeout(() => {
+        if (selectedRoom.isTimed && secondsLeft <= 0) return;
+        typingText.innerText = activeBot.text;
+        typingBox.style.display = 'flex';
+        
+        setTimeout(() => {
+          typingBox.style.display = 'none';
+          const randReply = botReplies[Math.floor(Math.random() * botReplies.length)];
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          appendMessageUI({
+            sender: activeBot.name,
+            content: randReply.content,
+            translation: randReply.translation,
+            time: timeStr
+          });
+        }, 1200);
+
+      }, 800);
+    }
+
+    function startBotSimulation() {
+      // Loop bots chatting
+      setInterval(() => {
+        if (currentPanelId !== 'screen-chat') return;
+        if (selectedRoom.isTimed && secondsLeft <= 0) return;
+        
+        // 30% chance every 10 seconds
+        if (Math.random() < 0.3) {
+          triggerBotResponse();
+        }
+      }, 10000);
+    }
+
+    function chatSessionExpired() {
+      if (botTypingTimeout) clearTimeout(botTypingTimeout);
+      document.getElementById('chat-typing-container').style.display = 'none';
+      document.getElementById('expired-msg-count').innerText = messagesSent;
+      
+      setTimeout(() => {
+        switchPanel('screen-expired');
+      }, 1000);
+    }
+
+    function exitToHome() {
+      if (chatTimerInterval) clearInterval(chatTimerInterval);
+      if (botTypingTimeout) clearTimeout(botTypingTimeout);
+      document.getElementById('chat-typing-container').style.display = 'none';
+      switchPanel('screen-home');
+    }
+
+    // Capture Enter key on chat text inputs
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendChatMessage();
+      }
+    });
+  </script>
+</body>
+</html>
